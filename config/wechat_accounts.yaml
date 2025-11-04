@@ -1,0 +1,74 @@
+# 微信公众号 AI 助手配置文件
+# 使用说明：https://github.com/mathilda20011003/new/blob/master/微信公众号AI助手集成方案.md
+
+# WeWe RSS 配置
+wewe_rss:
+  base_url: "https://你的zeabur地址.zeabur.app"  # 替换为你的 WeWe RSS 地址
+  auth_code: "123456"  # 你设置的 AUTH_CODE（如果有的话）
+
+# AI 配置
+ai:
+  provider: "deepseek"  # 可选: deepseek, qwen, openai
+  api_key: ""  # 留空，从环境变量 DEEPSEEK_API_KEY 读取
+  model: "deepseek-chat"  # DeepSeek 模型
+  max_tokens: 150  # 摘要最大长度
+
+# 公众号列表
+# 获取 Feed ID 的方法：
+# 1. 在 WeWe RSS 中添加公众号
+# 2. 添加成功后会显示 Feed ID（类似 MP_WXS_123456）
+# 3. 复制 Feed ID 到下面的配置中
+accounts:
+  # 示例 1: 36氪
+  - name: "36氪"
+    feed_id: "MP_WXS_123456"  # 替换为实际的 Feed ID
+    keywords:
+      - "AI"
+      - "AIGC"
+      - "人工智能"
+      - "大模型"
+      - "ChatGPT"
+      - "Sora"
+      - "Midjourney"
+  
+  # 示例 2: 机器之心
+  - name: "机器之心"
+    feed_id: "MP_WXS_789012"  # 替换为实际的 Feed ID
+    keywords:
+      - "深度学习"
+      - "大模型"
+      - "AI"
+      - "机器学习"
+      - "神经网络"
+  
+  # 示例 3: 量子位
+  - name: "量子位"
+    feed_id: "MP_WXS_345678"  # 替换为实际的 Feed ID
+    keywords:
+      - "AI"
+      - "机器学习"
+      - "科技"
+      - "人工智能"
+  
+  # 添加更多公众号...
+  # - name: "你的公众号名称"
+  #   feed_id: "MP_WXS_xxxxxx"
+  #   keywords:
+  #     - "关键词1"
+  #     - "关键词2"
+
+# 推送配置
+push:
+  enabled: true
+  time: "08:00"  # 每天推送时间（北京时间）
+  max_articles: 10  # 每次最多推送文章数
+  
+# 高级配置
+advanced:
+  # 是否保存文章到本地
+  save_to_file: true
+  # 保存路径
+  output_path: "data/wechat_articles.json"
+  # 是否去重（基于文章链接）
+  deduplicate: true
+
