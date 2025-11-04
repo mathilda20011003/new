@@ -28,6 +28,7 @@ jobs:
       - name: Run WeChat RSS Crawler
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           python wechat_rss/wechat_rss_crawler.py

@@ -29,10 +29,24 @@ class WeChatRSSCrawler:
         
         # 初始化 AI 总结器
         ai_config = self.config.get('ai', {})
+        provider = ai_config.get('provider', 'openrouter')
+
+        # 根据 provider 获取对应的 API Key
+        if provider == 'openrouter':
+            api_key = os.getenv('OPENROUTER_API_KEY') or ai_config.get('api_key')
+        elif provider == 'deepseek':
+            api_key = os.getenv('DEEPSEEK_API_KEY') or ai_config.get('api_key')
+        elif provider == 'qwen':
+            api_key = os.getenv('QWEN_API_KEY') or ai_config.get('api_key')
+        elif provider == 'openai':
+            api_key = os.getenv('OPENAI_API_KEY') or ai_config.get('api_key')
+        else:
+            api_key = ai_config.get('api_key')
+
         self.ai_summarizer = AISummarizer(
-            provider=ai_config.get('provider', 'deepseek'),
-            api_key=os.getenv('DEEPSEEK_API_KEY') or ai_config.get('api_key'),
-            model=ai_config.get('model', 'deepseek-chat'),
+            provider=provider,
+            api_key=api_key,
+            model=ai_config.get('model', 'meta-llama/llama-3.1-8b-instruct:free'),
             max_tokens=ai_config.get('max_tokens', 150)
         )
         

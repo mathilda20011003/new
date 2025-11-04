@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 AI 总结模块
-支持多种 AI 服务: DeepSeek, 通义千问, OpenAI
+支持多种 AI 服务: OpenRouter, DeepSeek, 通义千问, OpenAI
 """
 
 import re
@@ -11,14 +11,14 @@ from typing import Optional
 
 class AISummarizer:
     """AI 文章总结器"""
-    
-    def __init__(self, provider: str = "deepseek", api_key: str = "", 
-                 model: str = "deepseek-chat", max_tokens: int = 150):
+
+    def __init__(self, provider: str = "openrouter", api_key: str = "",
+                 model: str = "meta-llama/llama-3.1-8b-instruct:free", max_tokens: int = 150):
         """
         初始化 AI 总结器
-        
+
         Args:
-            provider: AI 服务提供商 (deepseek, qwen, openai)
+            provider: AI 服务提供商 (openrouter, deepseek, qwen, openai)
             api_key: API Key
             model: 模型名称
             max_tokens: 最大 token 数
@@ -27,23 +27,34 @@ class AISummarizer:
         self.api_key = api_key
         self.model = model
         self.max_tokens = max_tokens
-        
+
         # 配置 API 端点
         self.api_configs = {
+            'openrouter': {
+                'base_url': 'https://openrouter.ai/api/v1',
+                'default_model': 'meta-llama/llama-3.1-8b-instruct:free',
+                'extra_headers': {
+                    'HTTP-Referer': 'https://github.com/mathilda20011003/new',
+                    'X-Title': 'WeChat RSS AI Assistant'
+                }
+            },
             'deepseek': {
                 'base_url': 'https://api.deepseek.com/v1',
-                'default_model': 'deepseek-chat'
+                'default_model': 'deepseek-chat',
+                'extra_headers': {}
             },
             'qwen': {
                 'base_url': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-                'default_model': 'qwen-turbo'
+                'default_model': 'qwen-turbo',
+                'extra_headers': {}
             },
             'openai': {
                 'base_url': 'https://api.openai.com/v1',
-                'default_model': 'gpt-3.5-turbo'
+                'default_model': 'gpt-3.5-turbo',
+                'extra_headers': {}
             }
         }
-        
+
         if not self.api_key:
             print(f"⚠️  警告: 未设置 API Key，AI 总结功能将不可用")
     
@@ -132,32 +143,36 @@ class AISummarizer:
     def _call_ai_api(self, prompt: str) -> Optional[str]:
         """
         调用 AI API
-        
+
         Args:
             prompt: 提示词
-        
+
         Returns:
             AI 响应，失败返回 None
         """
         import requests
-        
+
         try:
             # 获取配置
             config = self.api_configs.get(self.provider)
             if not config:
                 print(f"   ⚠️  不支持的 AI 提供商: {self.provider}")
                 return None
-            
+
             base_url = config['base_url']
             model = self.model or config['default_model']
-            
+            extra_headers = config.get('extra_headers', {})
+
             # 构建请求
             url = f"{base_url}/chat/completions"
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {self.api_key}'
             }
-            
+
+            # 添加额外的请求头（OpenRouter 需要）
+            headers.update(extra_headers)
+
             data = {
                 'model': model,
                 'messages': [
@@ -166,17 +181,17 @@ class AISummarizer:
                 'max_tokens': self.max_tokens,
                 'temperature': 0.7
             }
-            
+
             # 发送请求
             response = requests.post(url, json=data, headers=headers, timeout=30)
             response.raise_for_status()
-            
+
             # 解析响应
             result = response.json()
             summary = result['choices'][0]['message']['content']
-            
+
             return summary
-            
+
         except Exception as e:
             print(f"   ⚠️  API 调用失败: {e}")
             return None
@@ -207,22 +222,30 @@ class AISummarizer:
 # 测试代码
 if __name__ == "__main__":
     import os
-    
-    # 测试 DeepSeek
-    api_key = os.getenv('DEEPSEEK_API_KEY')
+
+    # 测试 OpenRouter
+    api_key = os.getenv('OPENROUTER_API_KEY') or os.getenv('DEEPSEEK_API_KEY')
     if api_key:
-        summarizer = AISummarizer(provider='deepseek', api_key=api_key)
-        
+        # 优先使用 OpenRouter
+        if os.getenv('OPENROUTER_API_KEY'):
+            summarizer = AISummarizer(
+                provider='openrouter',
+                api_key=api_key,
+                model='meta-llama/llama-3.1-8b-instruct:free'
+            )
+        else:
+            summarizer = AISummarizer(provider='deepseek', api_key=api_key)
+
         test_title = "OpenAI 发布 Sora 视频生成模型"
         test_content = """
         <p>OpenAI 今天发布了全新的视频生成模型 Sora，能够根据文本描述生成高质量的视频内容。</p>
         <p>Sora 可以生成长达 60 秒的视频，包含复杂的场景、多个角色和精确的动作。</p>
         <p>这标志着 AI 视频生成技术的重大突破。</p>
         """
-        
+
         summary = summarizer.summarize(test_title, test_content)
         print(f"标题: {test_title}")
         print(f"摘要: {summary}")
     else:
-        print("请设置 DEEPSEEK_API_KEY 环境变量")
+        print("请设置 OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY 环境变量")
 

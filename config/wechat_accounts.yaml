@@ -8,10 +8,21 @@ wewe_rss:
 
 # AI 配置
 ai:
-  provider: "deepseek"  # 可选: deepseek, qwen, openai
-  api_key: ""  # 留空，从环境变量 DEEPSEEK_API_KEY 读取
-  model: "deepseek-chat"  # DeepSeek 模型
+  provider: "openrouter"  # 可选: openrouter, deepseek, qwen, openai
+  api_key: ""  # 留空，从环境变量 OPENROUTER_API_KEY 读取
+  model: "meta-llama/llama-3.1-8b-instruct:free"  # OpenRouter 免费模型
   max_tokens: 150  # 摘要最大长度
+
+  # 其他可用的 OpenRouter 免费模型：
+  # - "meta-llama/llama-3.1-8b-instruct:free" (推荐，速度快)
+  # - "google/gemma-2-9b-it:free" (Google 出品)
+  # - "microsoft/phi-3-mini-128k-instruct:free" (微软出品)
+  # - "qwen/qwen-2-7b-instruct:free" (阿里出品)
+
+  # 如果使用 DeepSeek，配置如下：
+  # provider: "deepseek"
+  # api_key: ""  # 从环境变量 DEEPSEEK_API_KEY 读取
+  # model: "deepseek-chat"
 
 # 公众号列表
 # 获取 Feed ID 的方法：

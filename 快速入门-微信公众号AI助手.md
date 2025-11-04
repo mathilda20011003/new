@@ -103,8 +103,28 @@ Feed ID: MP_WXS_789012
 
 ### 第三步：配置项目并运行（10分钟）
 
-#### 3.1 获取 DeepSeek API Key
+#### 3.1 获取 OpenRouter API Key（推荐）
 
+**为什么选择 OpenRouter？**
+- ✅ 完全免费（使用免费模型）
+- ✅ 无需信用卡
+- ✅ 多种模型可选
+- ✅ 注册简单（Google/GitHub 登录）
+
+**操作步骤**：
+
+1. 访问：https://openrouter.ai
+2. 点击 "Sign In" → 选择 "Sign in with Google" 或 "Sign in with GitHub"
+3. 授权登录
+4. 访问：https://openrouter.ai/keys
+5. 点击 "Create Key"
+6. 输入名称（如：`WeChat RSS Bot`）
+7. 复制 API Key（类似：`sk-or-v1-xxxxxxxxxxxxx`）
+8. **保存到记事本**
+
+**备选方案：DeepSeek API Key**
+
+如果你更喜欢 DeepSeek：
 1. 访问：https://platform.deepseek.com
 2. 注册并登录
 3. 点击 "API Keys" → "创建新密钥"
@@ -117,8 +137,12 @@ Feed ID: MP_WXS_789012
 2. 点击 **Settings** → **Secrets and variables** → **Actions**
 3. 点击 **New repository secret**
 4. 添加以下 Secret：
-   - Name: `DEEPSEEK_API_KEY`
-   - Value: 你的 DeepSeek API Key（刚才复制的）
+   - **使用 OpenRouter**：
+     - Name: `OPENROUTER_API_KEY`
+     - Value: 你的 OpenRouter API Key（刚才复制的）
+   - **使用 DeepSeek**：
+     - Name: `DEEPSEEK_API_KEY`
+     - Value: 你的 DeepSeek API Key（刚才复制的）
 5. 点击 **Add secret**
 
 #### 3.3 配置公众号列表
