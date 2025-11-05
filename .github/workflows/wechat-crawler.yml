@@ -1,10 +1,10 @@
-name: WeChat RSS Crawler
+name: WeChat AI Summary Crawler
 
 on:
-  # 定时触发：每天北京时间 8:00 运行（UTC 0:00）
+  # 定时触发：每天北京时间 10:00 运行（UTC 2:00）
   schedule:
-    - cron: '0 0 * * *'
-  
+    - cron: '0 2 * * *'
+
   # 支持手动触发
   workflow_dispatch:
 
@@ -23,21 +23,22 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install requests pyyaml feedparser
-      
-      - name: Run WeChat RSS Crawler
+          pip install requests feedparser python-dateutil
+
+      - name: Run WeChat AI Summary Crawler
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          WEWE_RSS_BASE_URL: ${{ secrets.WEWE_RSS_BASE_URL }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
         run: |
-          python wechat_rss/wechat_rss_crawler.py
+          python run_api_crawler.py
       
-      - name: Upload artifacts (if any)
+      - name: Upload logs (if any)
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: wechat-articles
-          path: data/wechat_articles.json
+          name: wechat-ai-summary-logs
+          path: "*.log"
           if-no-files-found: ignore
 
