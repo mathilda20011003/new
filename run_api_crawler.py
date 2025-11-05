@@ -60,16 +60,36 @@ def fetch_articles_via_api(feed_id, base_url, account_name):
                         # 获取时间信息，优先使用published，然后是updated
                         time_info = entry.get('published', '') or entry.get('updated', '') or entry.get('date', '')
 
+                        # 获取文章内容，尝试多种方式
+                        content = ''
+                        if entry.get('content'):
+                            # 尝试获取content字段
+                            if isinstance(entry.content, list) and len(entry.content) > 0:
+                                content = entry.content[0].get('value', '')
+                            else:
+                                content = str(entry.content)
+
+                        # 如果content为空，尝试其他字段
+                        if not content:
+                            content = entry.get('description', '') or entry.get('summary', '')
+
+                        # 获取摘要信息
+                        summary = entry.get('summary', '') or entry.get('description', '')
+
                         article = {
                             'title': entry.get('title', '无标题'),
                             'link': entry.get('link', ''),
                             'published': time_info,
-                            'summary': entry.get('summary', ''),
-                            'content': entry.get('content', [{}])[0].get('value', '') if entry.get('content') else '',
+                            'summary': summary,
+                            'content': content,
                             'account_name': account_name
                         }
                         articles.append(article)
-                        print(f"   📰 {article['title'][:50]}...")
+
+                        # 显示内容长度信息
+                        content_length = len(content) if content else 0
+                        summary_length = len(summary) if summary else 0
+                        print(f"   📰 {article['title'][:50]}... (内容:{content_length}字, 摘要:{summary_length}字)")
 
                     return articles
                 else:
@@ -161,22 +181,27 @@ def generate_ai_summary(content, title):
     """生成AI摘要"""
     try:
         from wechat_rss.ai_summarizer import AISummarizer
-        
+
         api_key = os.getenv('OPENROUTER_API_KEY')
         model = os.getenv('AI_MODEL', 'google/gemini-2.5-flash-lite-preview-09-2025')
-        
+
+        # 如果内容太长，截取前2000字符
+        if len(content) > 2000:
+            content = content[:2000] + "..."
+            print(f"📝 内容过长，截取前2000字符")
+
         summarizer = AISummarizer(
             provider='openrouter',
             api_key=api_key,
             model=model,
             max_tokens=150
         )
-        
-        print(f"🤖 生成AI摘要: {title[:30]}...")
+
+        print(f"🤖 生成AI摘要: {title[:30]}... (内容长度: {len(content)}字)")
         summary = summarizer.summarize(title, content)
-        print(f"✅ AI摘要完成")
+        print(f"✅ AI摘要完成: {summary[:50]}...")
         return summary
-        
+
     except Exception as e:
         print(f"❌ AI摘要生成失败: {e}")
         return f"文章标题：{title}"
@@ -320,9 +345,31 @@ def main():
         selected_articles = filtered_articles[:2]
         print(f"📋 选择文章: {len(selected_articles)} 篇")
         
-        # 4. 生成AI摘要
+        # 4. 获取完整文章内容（如果需要）
+        print(f"🔍 尝试获取完整文章内容...")
+        try:
+            from wechat_rss.content_fetcher import WeChatContentFetcher
+            content_fetcher = WeChatContentFetcher()
+
+            # 批量获取文章内容
+            selected_articles = content_fetcher.batch_fetch_contents(selected_articles)
+
+        except Exception as e:
+            print(f"⚠️ 内容获取模块加载失败: {e}")
+            print(f"📝 将使用RSS提供的基础内容")
+
+        # 5. 生成AI摘要
         for article in selected_articles:
-            ai_summary = generate_ai_summary(article['summary'], article['title'])
+            # 优先使用完整内容，然后是RSS内容，最后是标题
+            content_for_summary = (
+                article.get('full_content', '') or
+                article.get('content', '') or
+                article.get('summary', '') or
+                article['title']
+            )
+
+            print(f"📝 内容长度: {len(content_for_summary)} 字符")
+            ai_summary = generate_ai_summary(content_for_summary, article['title'])
             article['ai_summary'] = ai_summary
         
         all_filtered_articles.extend(selected_articles)
