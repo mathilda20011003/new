@@ -207,23 +207,23 @@ def generate_ai_summary(content, title):
         return f"文章标题：{title}"
 
 def send_to_feishu(articles):
-    """发送到飞书"""
+    """发送到飞书（兼容工作流和群机器人两种格式）"""
     try:
         webhook_url = os.getenv('FEISHU_WEBHOOK_URL')
-        
+
         # 构建消息内容
         text_content = []
         titles_list = []
-        
+
         for article in articles:
             account_name = article['account_name']
             title = article['title']
             ai_summary = article['ai_summary']
             link = article['link']
             published = article['published']
-            
+
             titles_list.append(f"{account_name}: {title}")
-            
+
             # 格式化时间 - 解析RSS时间格式
             try:
                 if published:
@@ -243,7 +243,7 @@ def send_to_feishu(articles):
             except Exception as e:
                 print(f"⚠️ 时间解析失败: {e}, 使用原始时间: {published}")
                 pub_time = published or datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
+
             # 新格式
             text_content.append(f"📍 {account_name}")
             text_content.append(f"📰 {title}")
@@ -251,19 +251,34 @@ def send_to_feishu(articles):
             text_content.append(f"🔗 阅读原文 | {pub_time}")
             text_content.append(f"   {link}")
             text_content.append("")
-        
-        # 构建完整的消息内容，不使用引用字段
-        full_content = text_content  # 直接使用文章内容，不添加重复标题
 
-        message = {
-            "content": {
-                "report_type": "微信公众号AI摘要",
-                "text": "\n".join(full_content),
-                "total_titles": "",  # 清空避免引用
-                "timestamp": ""      # 清空避免引用
+        # 构建完整的消息内容
+        content_text = "\n".join(text_content)
+
+        # 检测Webhook类型（参考TrendRadar实现）
+        is_group_bot = "open.feishu.cn" in webhook_url or "open-apis/bot" in webhook_url
+
+        if is_group_bot:
+            # 飞书群机器人格式（标准格式）
+            message = {
+                "msg_type": "text",
+                "content": {
+                    "text": content_text
+                }
             }
-        }
-        
+            print("🤖 使用飞书群机器人格式推送")
+        else:
+            # 飞书工作流格式（保持兼容）
+            message = {
+                "content": {
+                    "report_type": "微信公众号AI摘要",
+                    "text": content_text,
+                    "total_titles": "",
+                    "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            }
+            print("⚙️ 使用飞书工作流格式推送")
+
         print("📤 发送到飞书...")
         response = requests.post(
             webhook_url,
@@ -271,16 +286,33 @@ def send_to_feishu(articles):
             headers={'Content-Type': 'application/json'},
             timeout=10
         )
-        
+
         if response.status_code == 200:
             result = response.json()
-            if result.get('code') == 0:
-                print("🎉 飞书推送成功！")
-                return True
-        
-        print(f"❌ 飞书推送失败: {response.status_code}")
-        return False
-        
+
+            if is_group_bot:
+                # 群机器人响应检查（参考TrendRadar）
+                if result.get("StatusCode") == 0 or result.get("code") == 0:
+                    print("🎉 飞书群机器人推送成功！")
+                    return True
+                else:
+                    error_msg = result.get("msg") or result.get("StatusMessage", "未知错误")
+                    print(f"❌ 飞书群机器人推送失败: {error_msg}")
+                    print(f"完整响应: {result}")
+                    return False
+            else:
+                # 工作流响应检查
+                if result.get('code') == 0:
+                    print("🎉 飞书工作流推送成功！")
+                    return True
+                else:
+                    print(f"❌ 飞书工作流推送失败: {result}")
+                    return False
+        else:
+            print(f"❌ 飞书推送失败，状态码: {response.status_code}")
+            print(f"响应内容: {response.text}")
+            return False
+
     except Exception as e:
         print(f"❌ 飞书推送异常: {e}")
         return False
