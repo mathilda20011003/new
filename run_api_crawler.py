@@ -244,13 +244,18 @@ def send_to_feishu(articles):
                 print(f"⚠️ 时间解析失败: {e}, 使用原始时间: {published}")
                 pub_time = published or datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            # 新格式
+            # 统一格式 - 紧密排列，无空行
             text_content.append(f"📍 {account_name}")
             text_content.append(f"📰 {title}")
             text_content.append(f"💡 {ai_summary}")
             text_content.append(f"🔗 阅读原文 | {pub_time}")
             text_content.append(f"   {link}")
-            text_content.append("")
+
+            # 只在文章之间添加分隔线（不是最后一篇文章）
+            if article != articles[-1]:
+                text_content.append("")
+                text_content.append("─" * 30)
+                text_content.append("")
 
         # 构建完整的消息内容
         content_text = "\n".join(text_content)

@@ -79,17 +79,44 @@ class AISummarizer:
     def truncate_content(self, content: str, max_length: int = 2000) -> str:
         """
         截断内容到指定长度
-        
+
         Args:
             content: 原始内容
             max_length: 最大长度
-        
+
         Returns:
             截断后的内容
         """
         if len(content) <= max_length:
             return content
         return content[:max_length] + "..."
+
+    def _clean_markdown_formatting(self, text: str) -> str:
+        """
+        清理Markdown格式标记
+
+        Args:
+            text: 包含Markdown格式的文本
+
+        Returns:
+            清理后的纯文本
+        """
+        # 移除加粗标记 **text** 和 __text__
+        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+        text = re.sub(r'__(.*?)__', r'\1', text)
+
+        # 移除斜体标记 *text* 和 _text_
+        text = re.sub(r'\*(.*?)\*', r'\1', text)
+        text = re.sub(r'_(.*?)_', r'\1', text)
+
+        # 移除其他常见的Markdown标记
+        text = re.sub(r'`(.*?)`', r'\1', text)  # 代码标记
+        text = re.sub(r'~~(.*?)~~', r'\1', text)  # 删除线
+
+        # 清理多余的空格
+        text = re.sub(r'\s+', ' ', text)
+
+        return text.strip()
     
     def summarize(self, title: str, content: str) -> Optional[str]:
         """
@@ -125,6 +152,8 @@ class AISummarizer:
                 summary = summary.strip()
                 # 移除可能的引号
                 summary = summary.strip('"\'')
+                # 移除Markdown格式标记（加粗、斜体等）
+                summary = self._clean_markdown_formatting(summary)
                 return summary
             else:
                 return self._simple_summary(title, content)
@@ -202,6 +231,7 @@ class AISummarizer:
 4. 避免使用"根据标题"、"可能"等不确定表述
 5. 直接给出具体的分析结论
 6. 突出创新点、市场机会或竞争优势
+7. 输出纯文本，不使用任何加粗、斜体等格式标记
 
 请用简洁有力的语言，提供有价值的商业洞察。"""
 
@@ -258,6 +288,7 @@ class AISummarizer:
 4. 识别技术优势、性能提升或解决的痛点
 5. 使用准确的技术术语但保持可读性
 6. 避免过度技术化，确保商业人士也能理解
+7. 输出纯文本，不使用任何加粗、斜体等格式标记
 
 请提供有深度的技术商业分析。"""
 
@@ -276,6 +307,7 @@ class AISummarizer:
 4. 突出投资价值和市场机会
 5. 分析对相关行业和生态的影响
 6. 提供前瞻性的商业判断
+7. 输出纯文本，不使用任何加粗、斜体等格式标记
 
 请提供有价值的商业洞察和趋势分析。"""
 
@@ -294,6 +326,7 @@ class AISummarizer:
 4. 评估主要玩家的竞争态势
 5. 预测行业发展方向和影响
 6. 突出对投资者和从业者的价值
+7. 输出纯文本，不使用任何加粗、斜体等格式标记
 
 请提供专业的行业分析和市场洞察。"""
 
@@ -312,6 +345,7 @@ class AISummarizer:
 4. 使用清晰、专业的表达方式
 5. 确保摘要具有独立的阅读价值
 6. 避免简单复述，提供深度分析
+7. 输出纯文本，不使用任何加粗、斜体等格式标记
 
 请提供有价值的内容洞察。"""
 
