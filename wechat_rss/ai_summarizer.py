@@ -111,18 +111,11 @@ class AISummarizer:
             clean_content = self.clean_html(content)
             clean_content = self.truncate_content(clean_content, 2000)
             
-            # 构建提示词
-            prompt = f"""请用1-2句话总结以下文章的核心内容（不超过100字）：
-
-标题：{title}
-
-内容：{clean_content}
-
-要求：
-1. 简洁明了，突出重点
-2. 使用中文
-3. 不要包含"本文"、"文章"等词汇
-4. 直接说明文章讲了什么"""
+            # 根据内容长度和类型选择不同的提示词
+            if len(clean_content.strip()) < 50:  # 内容很少，主要基于标题
+                prompt = self._get_title_based_prompt(title)
+            else:  # 有较多内容，基于完整内容分析
+                prompt = self._get_content_based_prompt(title, clean_content)
             
             # 调用 AI API
             summary = self._call_ai_api(prompt)
@@ -195,7 +188,133 @@ class AISummarizer:
         except Exception as e:
             print(f"   ⚠️  API 调用失败: {e}")
             return None
-    
+
+    def _get_title_based_prompt(self, title: str) -> str:
+        """基于标题的提示词"""
+        return f"""你是一位资深的商业分析师和科技记者。请基于以下标题，生成一个专业的商业洞察摘要（60-90字）：
+
+标题：{title}
+
+分析要求：
+1. 识别核心商业价值和技术突破点
+2. 分析对行业的潜在影响和意义
+3. 使用专业但通俗易懂的语言
+4. 避免使用"根据标题"、"可能"等不确定表述
+5. 直接给出具体的分析结论
+6. 突出创新点、市场机会或竞争优势
+
+请用简洁有力的语言，提供有价值的商业洞察。"""
+
+    def _get_content_based_prompt(self, title: str, content: str) -> str:
+        """基于完整内容的提示词"""
+        # 检测内容类型
+        content_type = self._detect_content_type(title, content)
+
+        if content_type == "tech":
+            return self._get_tech_prompt(title, content)
+        elif content_type == "business":
+            return self._get_business_prompt(title, content)
+        elif content_type == "industry":
+            return self._get_industry_prompt(title, content)
+        else:
+            return self._get_general_prompt(title, content)
+
+    def _detect_content_type(self, title: str, content: str) -> str:
+        """检测内容类型"""
+        text = (title + " " + content).lower()
+
+        # 技术类关键词
+        tech_keywords = ["ai", "人工智能", "模型", "算法", "技术", "开源", "api", "框架", "工具", "平台", "系统"]
+        # 商业类关键词
+        business_keywords = ["融资", "投资", "估值", "上市", "收购", "合作", "战略", "商业", "市场", "营收", "盈利"]
+        # 行业类关键词
+        industry_keywords = ["行业", "市场", "趋势", "报告", "数据", "分析", "增长", "规模", "份额", "竞争"]
+
+        tech_score = sum(1 for keyword in tech_keywords if keyword in text)
+        business_score = sum(1 for keyword in business_keywords if keyword in text)
+        industry_score = sum(1 for keyword in industry_keywords if keyword in text)
+
+        if tech_score >= max(business_score, industry_score):
+            return "tech"
+        elif business_score >= industry_score:
+            return "business"
+        elif industry_score > 0:
+            return "industry"
+        else:
+            return "general"
+
+    def _get_tech_prompt(self, title: str, content: str) -> str:
+        """技术类文章提示词"""
+        return f"""你是一位资深的技术分析师。请基于以下技术文章，生成一个专业的技术洞察摘要（严格控制在60-90字）：
+
+标题：{title}
+
+内容：{content}
+
+分析要求：
+1. 突出核心技术创新点和突破
+2. 分析技术的实际应用价值和场景
+3. 评估对开发者和行业的影响
+4. 识别技术优势、性能提升或解决的痛点
+5. 使用准确的技术术语但保持可读性
+6. 避免过度技术化，确保商业人士也能理解
+
+请提供有深度的技术商业分析。"""
+
+    def _get_business_prompt(self, title: str, content: str) -> str:
+        """商业类文章提示词"""
+        return f"""你是一位资深的商业分析师。请基于以下商业文章，生成一个专业的商业洞察摘要（严格控制在60-90字）：
+
+标题：{title}
+
+内容：{content}
+
+分析要求：
+1. 识别关键商业动态和战略意图
+2. 分析对市场格局和竞争的影响
+3. 评估商业模式创新或变化
+4. 突出投资价值和市场机会
+5. 分析对相关行业和生态的影响
+6. 提供前瞻性的商业判断
+
+请提供有价值的商业洞察和趋势分析。"""
+
+    def _get_industry_prompt(self, title: str, content: str) -> str:
+        """行业类文章提示词"""
+        return f"""你是一位资深的行业研究分析师。请基于以下行业文章，生成一个专业的行业洞察摘要（严格控制在60-90字）：
+
+标题：{title}
+
+内容：{content}
+
+分析要求：
+1. 提炼关键行业数据和趋势
+2. 分析市场规模、增长驱动因素
+3. 识别行业变化和发展机会
+4. 评估主要玩家的竞争态势
+5. 预测行业发展方向和影响
+6. 突出对投资者和从业者的价值
+
+请提供专业的行业分析和市场洞察。"""
+
+    def _get_general_prompt(self, title: str, content: str) -> str:
+        """通用文章提示词"""
+        return f"""你是一位资深的内容分析师。请基于以下文章，生成一个专业的内容摘要（严格控制在60-90字）：
+
+标题：{title}
+
+内容：{content}
+
+分析要求：
+1. 提炼文章的核心观点和价值
+2. 突出最重要的信息和洞察
+3. 分析内容的实际意义和影响
+4. 使用清晰、专业的表达方式
+5. 确保摘要具有独立的阅读价值
+6. 避免简单复述，提供深度分析
+
+请提供有价值的内容洞察。"""
+
     def _simple_summary(self, title: str, content: str) -> str:
         """
         简单摘要（不使用 AI）

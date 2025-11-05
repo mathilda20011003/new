@@ -194,7 +194,7 @@ def generate_ai_summary(content, title):
             provider='openrouter',
             api_key=api_key,
             model=model,
-            max_tokens=150
+            max_tokens=120  # 减少token数量以控制摘要长度
         )
 
         print(f"🤖 生成AI摘要: {title[:30]}... (内容长度: {len(content)}字)")
