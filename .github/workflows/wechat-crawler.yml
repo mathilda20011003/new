@@ -1,7 +1,8 @@
-name: WeChat AI Summary Crawler
+name: WeChat AI Summary Crawler (WeWe RSS v2.x)
 
 on:
   # 定时触发：每天北京时间 10:00 运行（UTC 2:00）
+  # 在WeWe RSS v2.x自动更新后获取最新数据
   schedule:
     - cron: '0 2 * * *'
 
@@ -25,13 +26,16 @@ jobs:
         run: |
           pip install requests feedparser python-dateutil
 
-      - name: Run WeChat AI Summary Crawler
+      - name: Run WeChat AI Summary Crawler with WeWe RSS v2.x
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          WEWE_RSS_BASE_URL: ${{ secrets.WEWE_RSS_BASE_URL }}
+          WEWE_RSS_BASE_URL: ${{ secrets.WEWE_RSS_BASE_URL }}  # WeWe RSS v2.x 服务地址
+          WEWE_RSS_AUTH_CODE: ${{ secrets.WEWE_RSS_AUTH_CODE }}  # WeWe RSS v2.x 授权码（可选）
           AI_MODEL: ${{ secrets.AI_MODEL }}
         run: |
+          echo "🚀 使用 WeWe RSS v2.x 获取文章数据..."
+          echo "📡 WeWe RSS 地址: $WEWE_RSS_BASE_URL"
           python run_api_crawler.py
       
       - name: Upload logs (if any)

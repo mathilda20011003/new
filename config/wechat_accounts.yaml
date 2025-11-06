@@ -1,66 +1,44 @@
-# 微信公众号 AI 助手配置文件
-# 注意：所有密钥和基础配置已移至 .env 文件统一管理
-# 此文件只保留公众号列表配置
-
-  # 其他可用的 OpenRouter 免费模型：
-  # - "meta-llama/llama-3.1-8b-instruct:free" (推荐，速度快)
-  # - "google/gemma-2-9b-it:free" (Google 出品)
-  # - "microsoft/phi-3-mini-128k-instruct:free" (微软出品)
-  # - "qwen/qwen-2-7b-instruct:free" (阿里出品)
-
-  # 如果使用 DeepSeek，配置如下：
-  # provider: "deepseek"
-  # api_key: ""  # 从环境变量 DEEPSEEK_API_KEY 读取
-  # model: "deepseek-chat"
-
-# 公众号列表
-# 获取 Feed ID 的方法：
-# 1. 在 WeWe RSS 中添加公众号
-# 2. 添加成功后会显示 Feed ID（类似 MP_WXS_123456）
-# 3. 复制 Feed ID 到下面的配置中
 accounts:
-  - name: "短剧自习室"
-    feed_id: "MP_WXS_3906677264.atom"  # 替换为实际的feed_id
-    keywords:
-      - "漫剧"
-      - "AI漫剧"
-      - "红果"
-      - "短剧"
-
-  - name: "机器之心"
-    feed_id: "MP_WXS_3073282833.atom"  # 替换为实际的feed_id
-    keywords:
-      - "AI视频"
-      - "AI生图"
-      - "大模型"
-
-  - name: "漫剧有数"
-    feed_id: "MP_WXS_3621201576.atom"  # 替换为实际的feed_id
-    keywords:
-      - "漫剧"
-      - "抖音漫剧"
-      - "女频"
-      - "爆款"
-  
-  # 添加更多公众号...
-  # - name: "你的公众号名称"
-  #   feed_id: "MP_WXS_xxxxxx"
-  #   keywords:
-  #     - "关键词1"
-  #     - "关键词2"
-
-# 推送配置
+- _note: '从WeWe RSS v2.x获取: http://localhost:4000/feeds/MP_WXS_3906677264.rss'
+  feed_id: MP_WXS_3906677264
+  keywords:
+  - 漫剧
+  - AI漫剧
+  - 红果
+  - 短剧
+  name: 短剧自习室
+- _note: '从WeWe RSS v2.x获取: http://localhost:4000/feeds/MP_WXS_3073282833.rss'
+  feed_id: MP_WXS_3073282833
+  keywords:
+  - AI视频
+  - AI生图
+  - 大模型
+  name: 机器之心
+- _note: '从WeWe RSS v2.x获取: http://localhost:4000/feeds/MP_WXS_3621201576.rss'
+  feed_id: MP_WXS_3621201576
+  keywords:
+  - 漫剧
+  - 抖音漫剧
+  - 女频
+  - 爆款
+  name: 漫剧有数
+advanced:
+  deduplicate: true
+  output_path: data/wechat_articles.json
+  save_to_file: true
 push:
   enabled: true
-  time: "08:00"  # 每天推送时间（北京时间）
-  max_articles: 10  # 每次最多推送文章数
-  
-# 高级配置
-advanced:
-  # 是否保存文章到本地
-  save_to_file: true
-  # 保存路径
-  output_path: "data/wechat_articles.json"
-  # 是否去重（基于文章链接）
-  deduplicate: true
-
+  max_articles: 10
+  time: 08:00
+wewe_rss:
+  auth_code: '123567'
+  auto_update: true
+  base_url: http://localhost:4000
+  fulltext_mode: true
+  notes:
+  - 1. 首次使用需要访问 http://localhost:4000 添加公众号
+  - 2. 扫码登录微信读书账号（不要勾选24小时后自动退出）
+  - 3. 添加公众号后获取Feed ID，更新下面的feed_id配置
+  - 4. Feed ID格式：MP_WXS_xxxxxxxx（不需要.rss/.atom后缀）
+  update_schedule: 35 5,17 * * *
+  version: v2.x

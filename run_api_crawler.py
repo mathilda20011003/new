@@ -31,21 +31,22 @@ def load_env():
         print("✅ .env 文件加载完成")
 
 def fetch_articles_via_api(feed_id, base_url, account_name):
-    """通过RSS获取文章数据"""
+    """通过WeWe RSS v2.x获取文章数据"""
     try:
         import feedparser
 
-        # 使用正确的RSS端点格式
+        # WeWe RSS v2.x 的RSS端点格式
+        # 支持手动触发更新和全文内容
         rss_endpoints = [
-            f"{base_url}/feeds/{feed_id}",
-            f"{base_url}/feeds/{feed_id}.rss",
-            f"{base_url}/feeds/{feed_id}.atom"
+            f"{base_url}/feeds/{feed_id}?update=true&limit=10",  # 触发更新并限制数量
+            f"{base_url}/feeds/{feed_id}.rss?update=true&limit=10",
+            f"{base_url}/feeds/{feed_id}.atom?update=true&limit=10"
         ]
 
         for endpoint in rss_endpoints:
             try:
-                print(f"📡 尝试RSS: {endpoint}")
-                response = requests.get(endpoint, timeout=10)
+                print(f"📡 尝试WeWe RSS v2.x: {endpoint}")
+                response = requests.get(endpoint, timeout=30)  # 增加超时时间
 
                 if response.status_code == 200:
                     print(f"✅ RSS可用: {endpoint}")
